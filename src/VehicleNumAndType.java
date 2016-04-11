@@ -1,5 +1,7 @@
 import java.io.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -9,7 +11,7 @@ public class VehicleNumAndType {
 
     public VehicleNumAndType(){}
 
-    public static void preprocess(String path,Map<String,String> preDataMap){
+    public static void preprocess(String path,String outputPath,Map<String,String> preDataMap){
 //        String vehicleInfoPath = "/Users/yuxiao/项目/expriment/vehicle_info.txt";
 //        String vehicleInfoPath = "/root/lsy/highway/data_ditu/vehicle_info.txt";
         String vehicleInfoPath = path;
@@ -21,7 +23,7 @@ public class VehicleNumAndType {
             String line;
 //            int count=0;
             while ((line=reader.readLine()) !=null){
-//                line = new String(line.getBytes("GB2312"),"UTF-8");
+                line = new String(line.getBytes("GB2312"),"UTF-8");
                 String[] lineItems =line.split(",");
 //                System.out.println(new String(line.getBytes("GB2312"), "UTF-8"));
                 if(!preDataMap.containsKey(lineItems[0])){
@@ -33,10 +35,36 @@ public class VehicleNumAndType {
                 }
             }
             reader.close();
+
+
+            File outFile = new File(outputPath);
+            Writer writer = new OutputStreamWriter(new FileOutputStream(outFile));
+
+            for(Map.Entry<String,String> entry: preDataMap.entrySet()){
+//                System.out.println(entry.getKey()+entry.getValue());
+                writer.write(entry.getValue()+"\n");
+            }
+            //            numsAndTypeMap.clear();
+            writer.close();
+
         } catch (IOException e){
             e.printStackTrace();
         }
 
+    }
+
+    public static void fileNames(String path,List<String> fileNames){
+        try {
+            File outFile = new File(path);
+            Writer writer = new OutputStreamWriter(new FileOutputStream(outFile));
+
+            for(String itemString: fileNames){
+                writer.write(itemString+"\n");
+            }
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) throws UnsupportedEncodingException {
@@ -50,15 +78,16 @@ public class VehicleNumAndType {
         File[] dataFiles = fileDir.listFiles();
         Map<String,String> numsAndTypeMap = new HashMap<String,String>();
         Map<String,String> preDataMap = new HashMap<String,String>();
-
+        List<String> fileNames = new ArrayList<>();
         String vehicInfoPath = args[1];
-        preprocess(vehicInfoPath,preDataMap);
+//        preprocess(vehicInfoPath,preDataMap);
 
         for( File itemFile: dataFiles){
             if(itemFile.isDirectory()) continue;
 
             String vehNum;
             vehNum = itemFile.getName();
+            fileNames.add(vehNum);
 //            System.out.println(new String(itemFile.getName().getBytes(),"UTF-8"));
             vehNum = vehNum.substring(0, vehNum.indexOf("."));
             BufferedReader reader=null;
@@ -77,8 +106,9 @@ public class VehicleNumAndType {
                     if(tmpVehicleinfo.length>=4){
 
                         String vehType = tmpVehicleinfo[3];
-                        vehNum = tmpVehicleinfo[0];
+//                        vehNum = tmpVehicleinfo[0];
 //                        System.out.println((tmpVehicleinfo[0]+","+vehType));
+
                         if(!numsAndTypeMap.containsKey(vehNum) && preDataMap.containsKey(vehNum)){
                             String preDataLine = preDataMap.get(vehNum);
                             String[] preDataLineItem = preDataLine.split(",");
@@ -96,19 +126,22 @@ public class VehicleNumAndType {
             }
         }
 
-        try {
-            File outFile = new File(allVehicleInfoPath);
-            Writer writer = new OutputStreamWriter(new FileOutputStream(outFile));
+        fileNames(args[2],fileNames);
 
-            for(Map.Entry<String,String> entry: numsAndTypeMap.entrySet()){
-//                System.out.println(entry.getKey()+entry.getValue());
-                writer.write(entry.getKey() +"," +entry.getValue()+"\n");
-            }
-            //            numsAndTypeMap.clear();
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+
+//        try {
+//            File outFile = new File(allVehicleInfoPath);
+//            Writer writer = new OutputStreamWriter(new FileOutputStream(outFile));
+//
+//            for(Map.Entry<String,String> entry: numsAndTypeMap.entrySet()){
+////                System.out.println(entry.getKey()+entry.getValue());
+//                writer.write(entry.getKey() +"," +entry.getValue()+"\n");
+//            }
+//            //            numsAndTypeMap.clear();
+//            writer.close();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
 //        System.out.println("fe");
     }
 }
