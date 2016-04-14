@@ -9,11 +9,11 @@ public class Classfication {
 
 
     public static int isTheFourTypeJudgedByManage(String manageCode) {
-        if (manageCode.indexOf("01") == 0) {
+        if (manageCode.indexOf("01") == 0 || manageCode.indexOf("05201") == 0 || manageCode.indexOf("071") == 0 || manageCode.indexOf("08") == 0 || manageCode.indexOf("091") == 0) {
             return 1;
-        } else if (manageCode.indexOf("02") == 0) {
+        } else if (manageCode.indexOf("02") == 0 || manageCode.indexOf("05202") == 0 || manageCode.indexOf("07200") == 0 || manageCode.indexOf("07201") == 0 || manageCode.indexOf("092") == 0 || manageCode.indexOf("13000") == 0) {
             return 2;
-        } else if (manageCode.indexOf("03") == 0) {
+        } else if (manageCode.indexOf("03") == 0 || manageCode.indexOf("05203") == 0 || manageCode.indexOf("07202") == 0 || manageCode.indexOf("11") == 0) {
             return 3;
         } else {
             return 4;
@@ -27,9 +27,9 @@ public class Classfication {
             return 2;
         } else if (str.indexOf("3") == 0) {
             return 3;
-        } else if(str.indexOf("999") ==0){
+        } else if (str.indexOf("999") == 0) {
             return 999;
-        } else{
+        } else {
             return 4;
         }
     }
@@ -43,9 +43,9 @@ public class Classfication {
         Map<String, String> maintainDataMap = new HashMap<String, String>();
         Map<String, String> errorDataMap = new HashMap<>();
         Map<String, String> typeErrorMap = new HashMap<>(); //不能分类的数据
-        int count=0;
-        int typeCount=0;
-        int typeErrorCount=0;
+        int count = 0;
+        int typeCount = 0;
+        int typeErrorCount = 0;
 
 
         int sumOfTheSameType = 0;
@@ -58,47 +58,53 @@ public class Classfication {
             while ((line = reader.readLine()) != null) {
                 String[] lineItems = line.split(",");
                 //过滤江苏的车辆
-                if(lineItems[0].indexOf("苏") != 0) continue;
+                if (lineItems[0].indexOf("苏") != 0) continue;
 
-                   count++;
+                count++;
                 if (lineItems.length >= 4) {
                     typeCount++;
                     String manageArea = "";
-                    int[] manageCodeArr = new int[5];
+                    int[] manageCodeArr = new int[5];//一辆车所属的经营范围分类数组
                     for (int i = 3; i < lineItems.length; i++) {
-                        if(i==3){
+                        if (i == 3) {
                             String manageCode = lineItems[3];
                             manageCode = manageCode.substring(1);
                             manageCodeArr[isTheFourTypeJudgedByManage(manageCode)]++;
-                        } else{
+                        } else {
                             manageCodeArr[isTheFourTypeJudgedByManage(lineItems[i])]++;
                         }
-                            manageArea += lineItems[i] + ",";
+                        manageArea += lineItems[i] + ",";
                     }
 
-                    int maxManageCode =0;
-                    int maxManageCodePos =0;
-                    for(int i=1;i<=4;i++){
-                        if(manageCodeArr[i]>maxManageCode){
+                    int maxManageCode = 0;
+                    int maxManageCodePos = 0; //一辆车由经营范围确定的唯一类别
+                    for (int i = 1; i <= 4; i++) {
+                        if (manageCodeArr[i] > maxManageCode) {
                             maxManageCode = manageCodeArr[i];
-                            maxManageCodePos=i;
+                            maxManageCodePos = i;
                         }
                     }
-//                    int typeSelf = isTheFourTypeJudgedByType(lineItems[1]);
-//                    String typeSelfStr ="";
-//                    if(typeSelf==9){
-//
-//                    }
-//
-             guestDataMap.put(lineItems[0], lineItems[1] + "," + isTheFourTypeJudgedByType(lineItems[1]) + "," + lineItems[2] + "," + manageArea +maxManageCodePos);
-                } else{
+
+                    //自带类型判定，除999外
+                    int typeSelf = isTheFourTypeJudgedByType(lineItems[1]);
+                    if(typeSelf == maxManageCodePos){
+                        //自带类型与经营范围划分的类型一致
+                        sumOfTheSameType++;
+                    }else{
+                        sumOfDiffType++;
+                    }
+                    guestDataMap.put(lineItems[0], lineItems[1] + "," + typeSelf + "," + lineItems[2] + "," + manageArea + maxManageCodePos);
+                } else {
+//                    不能分类的车牌
                     typeErrorCount++;
-                    typeErrorMap.put(lineItems[0],line);
+                    typeErrorMap.put(lineItems[0], line);
                 }
             }
-            System.out.println("江苏车辆总共数量："+ count);
-            System.out.println("能分类数量："+ typeCount);
-            System.out.println("不能分类数量："+ typeErrorCount);
+            System.out.println("江苏车辆总共数量：" + count);
+            System.out.println("能分类数量：" + typeCount);
+            System.out.println("不能分类数量：" + typeErrorCount);
+            System.out.println("自带类型与经营范围划分的类型一致的数量:"+sumOfTheSameType);
+            System.out.println("自带类型与经营范围划分的类型不同的数量:"+sumOfDiffType);
             reader.close();
 
 
@@ -120,7 +126,9 @@ public class Classfication {
             for (Map.Entry<String, String> entry : errorDataMap.entrySet()) {
                 writer.write(entry.getKey() + "," + entry.getValue() + "\n");
             }
-            //            numsAndTypeMap.clear();
+            for(Map.Entry<String, String> entry: typeErrorMap.entrySet()){
+                writer.write(entry.getKey() + "," + entry.getValue() + "\n");
+            }
             writer.close();
 
         } catch (IOException e) {
