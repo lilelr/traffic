@@ -50,6 +50,7 @@ public class Classfication {
 
         int sumOfTheSameType = 0;
         int sumOfDiffType = 0;
+        int sumOfTypeIsNine =0 ; //类型自带为999的数量
         try {
             File dataFile = new File(vehicleInfoPath);
             InputStreamReader readinput = new InputStreamReader(new FileInputStream(dataFile), "UTF-8");
@@ -87,11 +88,19 @@ public class Classfication {
 
                     //自带类型判定，除999外
                     int typeSelf = isTheFourTypeJudgedByType(lineItems[1]);
-                    if(typeSelf == maxManageCodePos){
-                        //自带类型与经营范围划分的类型一致
-                        sumOfTheSameType++;
-                    }else{
-                        sumOfDiffType++;
+                    if (typeSelf!=999) { //判别除999外
+                        if(typeSelf == maxManageCodePos){
+                            //自带类型与经营范围划分的类型一致
+                            sumOfTheSameType++;
+                        }else{
+                            if(typeSelf!=4){
+                                //自带类型与经营范围划分的类型严格不同，属于"其他"的车辆不列入统计
+                                sumOfDiffType++;
+                            }
+
+                        }
+                    } else{
+                        sumOfTypeIsNine++;
                     }
                     guestDataMap.put(lineItems[0], lineItems[1] + "," + typeSelf + "," + lineItems[2] + "," + manageArea + maxManageCodePos);
                 } else {
@@ -105,6 +114,7 @@ public class Classfication {
             System.out.println("不能分类数量：" + typeErrorCount);
             System.out.println("自带类型与经营范围划分的类型一致的数量:"+sumOfTheSameType);
             System.out.println("自带类型与经营范围划分的类型不同的数量:"+sumOfDiffType);
+            System.out.println("自带类型为999的车辆数量:"+sumOfTypeIsNine);
             reader.close();
 
 
