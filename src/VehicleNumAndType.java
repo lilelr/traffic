@@ -1,3 +1,5 @@
+import org.junit.Test;
+
 import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -60,9 +62,10 @@ public class VehicleNumAndType {
     }
 
     // 四种类型分类
-    public static void classify() {
-        String vehicleInfoPath = "/Users/yuxiao/项目/expriment/result/vehicleResult.csv";
-        String outputPath = "/Users/yuxiao/项目/expriment/result/classfication.csv";
+    @Test
+    public  void classify() {
+        String vehicleInfoPath = "/Users/yuxiao/项目/expriment/0419/vehicleResult.csv";
+        String outputPath = "/Users/yuxiao/项目/expriment/0419/classfication.csv";
         Map<String, String> guestDataMap = new HashMap<String, String>();
         Map<String, String> truckDataMap = new HashMap<String, String>();
         Map<String, String> dangerDataMap = new HashMap<String, String>();
@@ -85,16 +88,23 @@ public class VehicleNumAndType {
             while ((line = reader.readLine()) != null) {
                 String[] lineItems = line.split(",");
                 //过滤江苏的车辆
-                if (lineItems[0].indexOf("苏") != 0) continue;
+//                if (lineItems[0].indexOf("苏") != 0) continue;
 
                 count++;
-                if (lineItems.length >= 4) {
+                if (lineItems.length >= 9) {
+                    //苏M07029,2,320000,999,321200,0,320000,,"03121,03122"
+                    StringBuffer tempValBuffer = new StringBuffer();
+                    for(int i=0;i<=6;i++){
+                        tempValBuffer.append(lineItems[i]).append(",");
+                    }
+
                     typeCount++;
                     String manageArea = "";
-                    int[] manageCodeArr = new int[5];//一辆车所属的经营范围分类数组
-                    for (int i = 3; i < lineItems.length; i++) {
-                        if (i == 3) {
-                            String manageCode = lineItems[3];
+                    //一辆车所属的经营范围分类数组
+                    int[] manageCodeArr = new int[5];
+                    for (int i = 8; i < lineItems.length; i++) {
+                        if (i == 8) {
+                            String manageCode = lineItems[8];
                             manageCode = manageCode.substring(1);
                             manageCodeArr[isTheFourTypeJudgedByManage(manageCode)]++;
                         } else {
@@ -113,8 +123,9 @@ public class VehicleNumAndType {
                     }
 
                     //自带类型判定，除999外
-                    int typeSelf = isTheFourTypeJudgedByType(lineItems[1]);
-                    if (typeSelf!=999) { //判别除999外
+                    int typeSelf = isTheFourTypeJudgedByType(lineItems[3]);
+                    if (typeSelf!=999) {
+                     //判别除999外
                         if(typeSelf == maxManageCodePos){
                             //自带类型与经营范围划分的类型一致
                             sumOfTheSameType++;
@@ -123,12 +134,12 @@ public class VehicleNumAndType {
                                 //自带类型与经营范围划分的类型严格不同，属于"其他"的车辆不列入统计
                                 sumOfDiffType++;
                             }
-
                         }
                     } else{
                         sumOfTypeIsNine++;
                     }
-                    guestDataMap.put(lineItems[0], lineItems[1] + "," + typeSelf + "," + lineItems[2] + "," + manageArea + maxManageCodePos);
+//                    guestDataMap.put(lineItems[0], tempValBuffer.toString()+ typeSelf + "," + manageArea + maxManageCodePos);
+                    guestDataMap.put(lineItems[0], tempValBuffer.toString()+ typeSelf + "," + maxManageCodePos);
                 } else {
 //                    不能分类的车牌
                     typeErrorCount++;
@@ -148,23 +159,23 @@ public class VehicleNumAndType {
             Writer writer = new OutputStreamWriter(new FileOutputStream(outFile), "UTF-8");
 
             for (Map.Entry<String, String> entry : guestDataMap.entrySet()) {
-                writer.write(entry.getKey() + "," + entry.getValue() + "\n");
+                writer.write( entry.getValue() + "\n");
             }
-            for (Map.Entry<String, String> entry : truckDataMap.entrySet()) {
-                writer.write(entry.getKey() + "," + entry.getValue() + "\n");
-            }
-            for (Map.Entry<String, String> entry : dangerDataMap.entrySet()) {
-                writer.write(entry.getKey() + "," + entry.getValue() + "\n");
-            }
-            for (Map.Entry<String, String> entry : maintainDataMap.entrySet()) {
-                writer.write(entry.getKey() + "," + entry.getValue() + "\n");
-            }
-            for (Map.Entry<String, String> entry : errorDataMap.entrySet()) {
-                writer.write(entry.getKey() + "," + entry.getValue() + "\n");
-            }
-            for(Map.Entry<String, String> entry: typeErrorMap.entrySet()){
-                writer.write(entry.getKey() + "," + entry.getValue() + "\n");
-            }
+//            for (Map.Entry<String, String> entry : truckDataMap.entrySet()) {
+//                writer.write(entry.getKey() + "," + entry.getValue() + "\n");
+//            }
+//            for (Map.Entry<String, String> entry : dangerDataMap.entrySet()) {
+//                writer.write(entry.getKey() + "," + entry.getValue() + "\n");
+//            }
+//            for (Map.Entry<String, String> entry : maintainDataMap.entrySet()) {
+//                writer.write(entry.getKey() + "," + entry.getValue() + "\n");
+//            }
+//            for (Map.Entry<String, String> entry : errorDataMap.entrySet()) {
+//                writer.write(entry.getKey() + "," + entry.getValue() + "\n");
+//            }
+//            for(Map.Entry<String, String> entry: typeErrorMap.entrySet()){
+//                writer.write(entry.getKey() + "," + entry.getValue() + "\n");
+//            }
             writer.close();
 
         } catch (IOException e) {
@@ -215,12 +226,23 @@ public class VehicleNumAndType {
                 //读取每个数据文件的第一行数据
                 while ((line = reader.readLine()) != null) {
                     String[] tmpVehicleinfo = line.split(",");
-                    if (tmpVehicleinfo.length >= 4) {
+                    // 确保所读数据有效 plate,plate_color,local_code,industry_code,xingzheng_code,yehu_code,now_local_code
+                    if (tmpVehicleinfo.length >= 7) {
+                        String plate_color = tmpVehicleinfo[1];
+                        String local_code = tmpVehicleinfo[2];
+                        String xingzheng_code = tmpVehicleinfo[4];
+                        String yehu_code = tmpVehicleinfo[5];
+                        String now_local_code = tmpVehicleinfo[6];
                         //提取自带类型
                         String vehType = tmpVehicleinfo[3];
+                        //将要保存的value 值
+                        String tmpVal = plate_color + ","+local_code +","+vehType+","+xingzheng_code
+                                        +"," +yehu_code+","+now_local_code;
+
                         if (!numsAndTypeMap.containsKey(vehNum)) {
-                            //vehiclo_info.txt 有相关车牌的经营范围信息
+
                             if (preDataMap.containsKey(vehNum)) {
+                                //vehiclo_info.txt 有相关车牌的经营范围信息
                                 String preDataLine = preDataMap.get(vehNum);
                                 String[] preDataLineItem = preDataLine.split(",");
                                 if (preDataLineItem.length >= 4) {
@@ -232,10 +254,11 @@ public class VehicleNumAndType {
                                             manageArea += preDataLineItem[i];
                                         }
                                     }
-                                    numsAndTypeMap.put(vehNum, vehType + "," + preDataLineItem[2] + "," + manageArea);
+                                    numsAndTypeMap.put(vehNum, tmpVal + "," + preDataLineItem[2] + "," + manageArea);
                                 }
                             } else {
-                                numsAndTypeMap.put(vehNum, vehType);
+                                //vehiclo_info.txt 没有相关车牌的经营范围信息，保存原始数据
+                                numsAndTypeMap.put(vehNum, tmpVal);
                             }
                         }
                         //只读取第一行
