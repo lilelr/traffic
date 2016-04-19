@@ -1,6 +1,10 @@
+import domain.Vehicle;
+import mysqlconnect.JdbcOperation;
 import org.junit.Test;
 
 import java.io.*;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -158,9 +162,38 @@ public class VehicleNumAndType {
             File outFile = new File(outputPath);
             Writer writer = new OutputStreamWriter(new FileOutputStream(outFile), "UTF-8");
 
+            Connection conn = JdbcOperation.getConn();
             for (Map.Entry<String, String> entry : guestDataMap.entrySet()) {
-                writer.write( entry.getValue() + "\n");
+                //苏JR1916,2,320000,11,320900,2137626623,320000,1,1
+//                writer.write( entry.getValue() + "\n");
+
+                Vehicle vehicle = new Vehicle();
+                String[] lineItems = entry.getValue().split(",");
+                // 信息 plate,plate_color,local_code,industry_code,xingzheng_code,yehu_code,now_local_code
+                vehicle.setPlate(lineItems[0]);
+                vehicle.setPlate_color(Integer.valueOf(lineItems[1]));
+                vehicle.setLocal_code(Integer.valueOf(lineItems[2]));
+                vehicle.setIndustry_code(Integer.valueOf(lineItems[3]));
+                vehicle.setXingzheng_code(Integer.valueOf(lineItems[4]));
+                vehicle.setYehu_code(Integer.valueOf(lineItems[5]));
+                vehicle.setNow_local_code(Integer.valueOf(lineItems[6]));
+
+                if(lineItems.length ==7){
+                    vehicle.setTypeself_catalogue(0);
+                    vehicle.setManage_catalogue(0);
+                } else{
+                    if(lineItems[7]=="999"){
+                        vehicle.setTypeself_catalogue(4);
+                    } else{
+                        vehicle.setTypeself_catalogue(Integer.valueOf(lineItems[7]));
+                    }
+                    vehicle.setManage_catalogue(Integer.valueOf(lineItems[8]));
+
+
+                }
+                JdbcOperation.insert(vehicle,conn);
             }
+
 //            for (Map.Entry<String, String> entry : truckDataMap.entrySet()) {
 //                writer.write(entry.getKey() + "," + entry.getValue() + "\n");
 //            }
@@ -176,9 +209,13 @@ public class VehicleNumAndType {
 //            for(Map.Entry<String, String> entry: typeErrorMap.entrySet()){
 //                writer.write(entry.getKey() + "," + entry.getValue() + "\n");
 //            }
+
+            conn.close();
             writer.close();
 
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (SQLException e) {
             e.printStackTrace();
         }
 
