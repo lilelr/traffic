@@ -7,7 +7,7 @@ import java.util.Map;
  */
 public class Classfication {
 
-
+    // 根据经营范围划分四种类型
     public static int isTheFourTypeJudgedByManage(String manageCode) {
         if (manageCode.indexOf("01") == 0 || manageCode.indexOf("05201") == 0 || manageCode.indexOf("071") == 0 || manageCode.indexOf("08") == 0 || manageCode.indexOf("091") == 0) {
             return 1;
@@ -20,6 +20,7 @@ public class Classfication {
         }
     }
 
+    // 根据自带类型划分四种类型
     public static int isTheFourTypeJudgedByType(String str) {
         if (str.indexOf("1") == 0) {
             return 1;
