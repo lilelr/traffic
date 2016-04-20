@@ -31,8 +31,8 @@ public class JdbcOperation {
 
     public static int insert(Vehicle vehicle,Connection conn) {
         int i = 0;
-        String sql = "insert into classification (plate,plate_color,local_code,industry_code,xingzheng_code,yehu_code,now_local_code,typeself_catalogue,manage_catalogue)" +
-                " values(?,?,?,?,?,?,?,?,?)";
+        String sql = "insert into classification (plate,plate_color,local_code,industry_code,xingzheng_code,yehu_code,now_local_code,typeself_catalogue,manage_catalogue,manage_area)" +
+                " values(?,?,?,?,?,?,?,?,?,?)";
         PreparedStatement pstmt;
         try {
             pstmt = (PreparedStatement) conn.prepareStatement(sql);
@@ -45,6 +45,7 @@ public class JdbcOperation {
             pstmt.setInt(7, vehicle.getNow_local_code());
             pstmt.setInt(8, vehicle.getTypeself_catalogue());
             pstmt.setInt(9, vehicle.getManage_catalogue());
+            pstmt.setString(10, vehicle.getManage_area());
             i = pstmt.executeUpdate();
             pstmt.close();
         } catch (SQLException e) {

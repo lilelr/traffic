@@ -16,6 +16,15 @@ public class Vehicle {
     private int now_local_code;
     private Integer typeself_catalogue;
     private Integer manage_catalogue;
+    private String manage_area;
+
+    public String getManage_area() {
+        return manage_area;
+    }
+
+    public void setManage_area(String manage_area) {
+        this.manage_area = manage_area;
+    }
 
     public String getPlate() {
         return plate;

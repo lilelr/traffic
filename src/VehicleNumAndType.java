@@ -143,11 +143,19 @@ public class VehicleNumAndType {
                         sumOfTypeIsNine++;
                     }
 //                    guestDataMap.put(lineItems[0], tempValBuffer.toString()+ typeSelf + "," + manageArea + maxManageCodePos);
-                    guestDataMap.put(lineItems[0], tempValBuffer.toString()+ typeSelf + "," + maxManageCodePos);
+                    manageArea = manageArea.replaceAll(",","#");
+                    guestDataMap.put(lineItems[0], tempValBuffer.toString()+ typeSelf + "," + maxManageCodePos+","+manageArea);
                 } else {
+                    //苏M07029,2,320000,999,321200,0,320000
+                    StringBuffer tempValBuffer = new StringBuffer();
+                    for(int i=0;i<=5;i++){
+                        tempValBuffer.append(lineItems[i]).append(",");
+                    }
+                    tempValBuffer.append(lineItems[6]);
+
 //                    不能分类的车牌
                     typeErrorCount++;
-                    typeErrorMap.put(lineItems[0], line);
+                    typeErrorMap.put(lineItems[0], tempValBuffer.toString());
                 }
             }
             System.out.println("江苏车辆总共数量：" + count);
@@ -163,6 +171,7 @@ public class VehicleNumAndType {
             Writer writer = new OutputStreamWriter(new FileOutputStream(outFile), "UTF-8");
 
             Connection conn = JdbcOperation.getConn();
+            //region 两种情况都能分类
             for (Map.Entry<String, String> entry : guestDataMap.entrySet()) {
                 //苏JR1916,2,320000,11,320900,2137626623,320000,1,1
 //                writer.write( entry.getValue() + "\n");
@@ -182,17 +191,24 @@ public class VehicleNumAndType {
                     vehicle.setTypeself_catalogue(0);
                     vehicle.setManage_catalogue(0);
                 } else{
-                    if(lineItems[7]=="999"){
-                        vehicle.setTypeself_catalogue(4);
+                    // 能够划分四种类型
+//                    System.out.println(lineItems[7]);
+                    if(lineItems[7].equals("999")){
+                        //按照第二种方法划分
+                        vehicle.setTypeself_catalogue(Integer.valueOf(lineItems[8]));
                     } else{
                         vehicle.setTypeself_catalogue(Integer.valueOf(lineItems[7]));
                     }
+                    String tempManageArea = lineItems[9].replaceAll("#",",");
+                    tempManageArea = tempManageArea.substring(0,tempManageArea.length()-1);
+                    vehicle.setManage_area(tempManageArea);
                     vehicle.setManage_catalogue(Integer.valueOf(lineItems[8]));
 
 
                 }
                 JdbcOperation.insert(vehicle,conn);
             }
+            //endregion
 
 //            for (Map.Entry<String, String> entry : truckDataMap.entrySet()) {
 //                writer.write(entry.getKey() + "," + entry.getValue() + "\n");
@@ -206,9 +222,26 @@ public class VehicleNumAndType {
 //            for (Map.Entry<String, String> entry : errorDataMap.entrySet()) {
 //                writer.write(entry.getKey() + "," + entry.getValue() + "\n");
 //            }
-//            for(Map.Entry<String, String> entry: typeErrorMap.entrySet()){
+
+            //不包含经营范围信息的车辆信息导入数据库
+            for(Map.Entry<String, String> entry: typeErrorMap.entrySet()){
 //                writer.write(entry.getKey() + "," + entry.getValue() + "\n");
-//            }
+                Vehicle vehicle = new Vehicle();
+                String[] lineItems = entry.getValue().split(",");
+                // 信息 plate,plate_color,local_code,industry_code,xingzheng_code,yehu_code,now_local_code
+                vehicle.setPlate(lineItems[0]);
+                vehicle.setPlate_color(Integer.valueOf(lineItems[1]));
+                vehicle.setLocal_code(Integer.valueOf(lineItems[2]));
+                vehicle.setIndustry_code(Integer.valueOf(lineItems[3]));
+                vehicle.setXingzheng_code(Integer.valueOf(lineItems[4]));
+                vehicle.setYehu_code(Integer.valueOf(lineItems[5]));
+                vehicle.setNow_local_code(Integer.valueOf(lineItems[6]));
+                //仅仅按照自带类型划分4种类型
+                vehicle.setTypeself_catalogue(isTheFourTypeJudgedByType(lineItems[3]));
+                vehicle.setManage_catalogue(0);
+                JdbcOperation.insert(vehicle, conn);
+
+            }
 
             conn.close();
             writer.close();
