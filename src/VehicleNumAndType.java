@@ -16,6 +16,8 @@ public class VehicleNumAndType {
     public VehicleNumAndType() {
     }
 
+
+    // 经营范围编码的数据预先读入到一个preDataMap里面
     public static void preprocess(String path, Map<String, String> preDataMap) {
         String vehicleInfoPath = path;
 
@@ -70,8 +72,9 @@ public class VehicleNumAndType {
     // classifacation.csv  测试用的,可
     @Test
     public  void classify() {
-        String vehicleInfoPath = "/Users/yuxiao/项目/expriment/0419/vehicleResult.csv";
-        String outputPath = "/Users/yuxiao/项目/expriment/0419/classfication.csv";
+        String vehicleInfoPath = "/Users/yuxiao/项目/expriment/result/staticmergeData.csv";
+//        String vehicleInfoPath = "/Users/yuxiao/项目/expriment/0419/vehicleResult.csv";
+//        String outputPath = "/Users/yuxiao/项目/expriment/0419/classfication.csv";
         Map<String, String> guestDataMap = new HashMap<String, String>();
         Map<String, String> truckDataMap = new HashMap<String, String>();
         Map<String, String> dangerDataMap = new HashMap<String, String>();
@@ -160,17 +163,17 @@ public class VehicleNumAndType {
                     typeErrorMap.put(lineItems[0], tempValBuffer.toString());
                 }
             }
-            System.out.println("江苏车辆总共数量：" + count);
-            System.out.println("能分类数量：" + typeCount);
-            System.out.println("不能分类数量：" + typeErrorCount);
-            System.out.println("自带类型与经营范围划分的类型一致的数量:"+sumOfTheSameType);
-            System.out.println("自带类型与经营范围划分的类型不同的数量:"+sumOfDiffType);
-            System.out.println("自带类型为999的车辆数量:"+sumOfTypeIsNine);
+//            System.out.println("江苏车辆总共数量：" + count);
+//            System.out.println("能分类数量：" + typeCount);
+//            System.out.println("不能分类数量：" + typeErrorCount);
+//            System.out.println("自带类型与经营范围划分的类型一致的数量:"+sumOfTheSameType);
+//            System.out.println("自带类型与经营范围划分的类型不同的数量:"+sumOfDiffType);
+//            System.out.println("自带类型为999的车辆数量:"+sumOfTypeIsNine);
             reader.close();
 
 
-            File outFile = new File(outputPath);
-            Writer writer = new OutputStreamWriter(new FileOutputStream(outFile), "UTF-8");
+//            File outFile = new File(outputPath);
+//            Writer writer = new OutputStreamWriter(new FileOutputStream(outFile), "UTF-8");
 
             Connection conn = JdbcOperation.getConn();
             //region 两种情况都能分类
@@ -208,7 +211,12 @@ public class VehicleNumAndType {
 
 
                 }
-                JdbcOperation.insert(vehicle,conn);
+
+                if(!JdbcOperation.query(vehicle,conn)){
+                    // 数据库中没有主键相同的数据,插入
+                    JdbcOperation.insert(vehicle,conn);
+
+                }
             }
             //endregion
 
@@ -241,16 +249,87 @@ public class VehicleNumAndType {
                 //仅仅按照自带类型划分4种类型
                 vehicle.setTypeself_catalogue(isTheFourTypeJudgedByType(lineItems[3]));
                 vehicle.setManage_catalogue(0);
-                JdbcOperation.insert(vehicle, conn);
+                if(!JdbcOperation.query(vehicle,conn)){
+                    // 数据库中没有主键相同的数据,插入
+                    JdbcOperation.insert(vehicle,conn);
 
+                }
             }
 
             conn.close();
-            writer.close();
+//            writer.close();
 
         } catch (IOException e) {
             e.printStackTrace();
         } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    @Test
+    public  void readStaticDataAndMerge(){
+
+        // key 车牌号 value 原始信息+经营范围（若有）
+        Map<String, String> numsAndTypeMap = new HashMap<>();
+        Map<String, String> preDataMap = new HashMap<>();
+//        String vehicInfoPath = args[1];
+     String vehicInfoPath = "/Users/yuxiao/项目/expriment/vehicle_info.txt";
+//        String vehicInfoPath = "/root/lsy/highway/data_ditu/vehicle_info.txt";
+        preprocess(vehicInfoPath, preDataMap);
+
+        File staticDataFile = new File("/Users/yuxiao/项目/expriment/静态数据.csv");
+        String allVehicleInfoPath = "/Users/yuxiao/项目/expriment/result/staticmergeData.csv";
+
+        BufferedReader reader =null;
+        Writer writer = null;
+        try {
+            InputStreamReader read = new InputStreamReader(new FileInputStream(staticDataFile));
+            reader = new BufferedReader(read);
+            File outFile = new File(allVehicleInfoPath);
+            writer = new OutputStreamWriter(new FileOutputStream(outFile));
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        String line;
+
+        try {
+            //逐条数据处理
+            while ((line = reader.readLine()) != null) {
+                String[] tmpVehicleinfo = line.split(",");
+                if(tmpVehicleinfo.length >=7){
+                    String val = "";
+                    String plate = tmpVehicleinfo[0].trim();
+                    if (preDataMap.containsKey(plate)) {
+                        //vehiclo_info.txt 有相关车牌的经营范围信息
+                        String preDataLine = preDataMap.get(plate);
+                        String[] preDataLineItem = preDataLine.split(",");
+                        if (preDataLineItem.length >= 4) {
+                            // 包含经营范围编码信息
+                            String manageArea = "";
+                            for (int i = 3; i < preDataLineItem.length; i++) {
+                                if (i != preDataLineItem.length - 1) {
+                                    manageArea += preDataLineItem[i] + ",";
+                                } else {
+                                    manageArea += preDataLineItem[i];
+                                }
+                            }
+                            val = line + ",,"+manageArea;
+                        }
+
+                    } else{
+                        // 没有经营范围代码信息,保留原数据
+                        val = line;
+                    }
+
+                    writer.write(val+"\n");
+
+                }
+
+            }
+            reader.close();
+            writer.close();
+        } catch (IOException e) {
             e.printStackTrace();
         }
 

@@ -3,10 +3,7 @@ package mysqlconnect;
 import domain.Vehicle;
 import org.junit.Test;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
 
 /**
  * Created by yuxiao on 16/4/19.
@@ -30,6 +27,8 @@ public class JdbcOperation {
     }
 
     public static int insert(Vehicle vehicle,Connection conn) {
+
+
         int i = 0;
         String sql = "insert into classification (plate,plate_color,local_code,industry_code,xingzheng_code,yehu_code,now_local_code,typeself_catalogue,manage_catalogue,manage_area)" +
                 " values(?,?,?,?,?,?,?,?,?,?)";
@@ -54,14 +53,39 @@ public class JdbcOperation {
         return i;
     }
 
+    // 是否有已插入相同的数据
+    public static boolean query(Vehicle vehicle,Connection conn) {
+
+
+        ResultSet rs;
+        boolean ans = false;
+        String sql = "select * from classification where plate = ? and plate_color = ?";
+        PreparedStatement pstmt;
+        try {
+            pstmt = (PreparedStatement) conn.prepareStatement(sql);
+            pstmt.setString(1, vehicle.getPlate());
+            pstmt.setInt(2, vehicle.getPlate_color());
+            rs = pstmt.executeQuery();
+            if(rs.next()) ans = true;
+            pstmt.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return ans;
+    }
+
+
     @Test
     public void test() throws Exception{
 
         Connection connection = JdbcOperation.getConn();
         Vehicle vehicle = new Vehicle();
-        vehicle.setPlate("江苏");
-        vehicle.setTypeself_catalogue(1);
+        vehicle.setPlate("苏AH0400");
+        vehicle.setPlate_color(2);
+        vehicle.setTypeself_catalogue(2);
         vehicle.setManage_catalogue(2);
-        int i = JdbcOperation.insert(vehicle,connection);
+//        int i = JdbcOperation.insert(vehicle,connection);
+        boolean isSame = JdbcOperation.query(vehicle,connection);
+        System.out.println(isSame);
     }
 }
