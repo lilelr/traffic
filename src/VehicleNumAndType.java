@@ -65,7 +65,9 @@ public class VehicleNumAndType {
         }
     }
 
-    // 四种类型分类
+    // 车辆数据四种类型分类,并把分类结果写入远端MySql 数据库
+    //  vehicleResult.csv  包含 自带类型和经营范围等内容的数据
+    // classifacation.csv  测试用的,可
     @Test
     public  void classify() {
         String vehicleInfoPath = "/Users/yuxiao/项目/expriment/0419/vehicleResult.csv";
