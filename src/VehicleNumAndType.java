@@ -247,7 +247,9 @@ public class VehicleNumAndType {
                 vehicle.setYehu_code(Integer.valueOf(lineItems[5]));
                 vehicle.setNow_local_code(Integer.valueOf(lineItems[6]));
                 //仅仅按照自带类型划分4种类型
-                vehicle.setTypeself_catalogue(isTheFourTypeJudgedByType(lineItems[3]));
+                Integer final_catalogue = isTheFourTypeJudgedByType(lineItems[3]);
+                if(final_catalogue == 999) final_catalogue = 4;
+                vehicle.setTypeself_catalogue(final_catalogue);
                 vehicle.setManage_catalogue(0);
                 if(!JdbcOperation.query(vehicle,conn)){
                     // 数据库中没有主键相同的数据,插入

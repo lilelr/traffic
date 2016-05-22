@@ -17,6 +17,15 @@ public class Vehicle {
     private Integer typeself_catalogue;
     private Integer manage_catalogue;
     private String manage_area;
+    private Integer final_catalogue;
+
+    public Integer getFinal_catalogue() {
+        return final_catalogue;
+    }
+
+    public void setFinal_catalogue(Integer final_catalogue) {
+        this.final_catalogue = final_catalogue;
+    }
 
     public String getManage_area() {
         return manage_area;

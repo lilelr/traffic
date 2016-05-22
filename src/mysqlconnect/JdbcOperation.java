@@ -30,8 +30,8 @@ public class JdbcOperation {
 
 
         int i = 0;
-        String sql = "insert into classification (plate,plate_color,local_code,industry_code,xingzheng_code,yehu_code,now_local_code,typeself_catalogue,manage_catalogue,manage_area)" +
-                " values(?,?,?,?,?,?,?,?,?,?)";
+        String sql = "insert into classification (plate,plate_color,local_code,industry_code,xingzheng_code,yehu_code,now_local_code,typeself_catalogue,manage_catalogue,manage_area,final_catalogue)" +
+                " values(?,?,?,?,?,?,?,?,?,?,?)";
         PreparedStatement pstmt;
         try {
             pstmt = (PreparedStatement) conn.prepareStatement(sql);
