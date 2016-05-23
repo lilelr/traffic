@@ -200,9 +200,9 @@ public class VehicleNumAndType {
 //                    System.out.println(lineItems[7]);
                     if(lineItems[7].equals("999")){
                         //按照第二种方法划分
-                        vehicle.setTypeself_catalogue(Integer.valueOf(lineItems[8]));
+                        vehicle.setFinal_catalogue(Integer.valueOf(lineItems[8]));
                     } else{
-                        vehicle.setTypeself_catalogue(Integer.valueOf(lineItems[7]));
+                        vehicle.setFinal_catalogue(Integer.valueOf(lineItems[7]));
                     }
                     String tempManageArea = lineItems[9].replaceAll("#",",");
                     tempManageArea = tempManageArea.substring(0,tempManageArea.length()-1);
@@ -249,7 +249,7 @@ public class VehicleNumAndType {
                 //仅仅按照自带类型划分4种类型
                 Integer final_catalogue = isTheFourTypeJudgedByType(lineItems[3]);
                 if(final_catalogue == 999) final_catalogue = 4;
-                vehicle.setTypeself_catalogue(final_catalogue);
+                vehicle.setFinal_catalogue(final_catalogue);
                 vehicle.setManage_catalogue(0);
                 if(!JdbcOperation.query(vehicle,conn)){
                     // 数据库中没有主键相同的数据,插入
