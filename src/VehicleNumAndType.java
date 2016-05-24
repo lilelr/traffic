@@ -88,6 +88,7 @@ public class VehicleNumAndType {
 
         int sumOfTheSameType = 0;
         int sumOfDiffType = 0;
+        int sumOfTheSamePlate=0;
         int sumOfTypeIsNine =0 ; //类型自带为999的数量
         try {
             File dataFile = new File(vehicleInfoPath);
@@ -149,7 +150,10 @@ public class VehicleNumAndType {
                     }
 //                    guestDataMap.put(lineItems[0], tempValBuffer.toString()+ typeSelf + "," + manageArea + maxManageCodePos);
                     manageArea = manageArea.replaceAll(",","#");
-                    guestDataMap.put(lineItems[0], tempValBuffer.toString()+ typeSelf + "," + maxManageCodePos+","+manageArea);
+                    if(guestDataMap.containsKey(lineItems[0]+"_"+lineItems[1])){
+                        sumOfTheSamePlate++;
+                    }
+                    guestDataMap.put(lineItems[0]+"_"+lineItems[1], tempValBuffer.toString()+ typeSelf + "," + maxManageCodePos+","+manageArea);
                 } else {
                     //苏M07029,2,320000,999,321200,0,320000
                     StringBuffer tempValBuffer = new StringBuffer();
@@ -160,10 +164,14 @@ public class VehicleNumAndType {
 
 //                    不能分类的车牌
                     typeErrorCount++;
-                    typeErrorMap.put(lineItems[0], tempValBuffer.toString());
+                    if (typeErrorMap.containsKey(lineItems[0]+"_"+lineItems[1])){
+                        sumOfTheSamePlate++;
+                    }
+                    typeErrorMap.put(lineItems[0]+"_"+lineItems[1], tempValBuffer.toString());
                 }
             }
-//            System.out.println("江苏车辆总共数量：" + count);
+           System.out.println("车辆总共数量：" + count);
+            System.out.println("车牌号和颜色相同的数量"+sumOfTheSamePlate);
 //            System.out.println("能分类数量：" + typeCount);
 //            System.out.println("不能分类数量：" + typeErrorCount);
 //            System.out.println("自带类型与经营范围划分的类型一致的数量:"+sumOfTheSameType);
@@ -177,6 +185,8 @@ public class VehicleNumAndType {
 
             Connection conn = JdbcOperation.getConn();
             //region 两种情况都能分类
+            // 两种情况都能分类的总数量
+            int countOfTwoKind = 0;
             for (Map.Entry<String, String> entry : guestDataMap.entrySet()) {
                 //苏JR1916,2,320000,11,320900,2137626623,320000,1,1
 //                writer.write( entry.getValue() + "\n");
@@ -193,7 +203,7 @@ public class VehicleNumAndType {
                 vehicle.setNow_local_code(Integer.valueOf(lineItems[6]));
 
                 if(lineItems.length ==7){
-                    vehicle.setTypeself_catalogue(0);
+                    vehicle.setFinal_catalogue(0);
                     vehicle.setManage_catalogue(0);
                 } else{
                     // 能够划分四种类型
@@ -215,9 +225,10 @@ public class VehicleNumAndType {
                 if(!JdbcOperation.query(vehicle,conn)){
                     // 数据库中没有主键相同的数据,插入
                     JdbcOperation.insert(vehicle,conn);
-
+                    countOfTwoKind++;
                 }
             }
+            System.out.println("两种情况都能分类的数据数量:"+countOfTwoKind);
             //endregion
 
 //            for (Map.Entry<String, String> entry : truckDataMap.entrySet()) {
@@ -233,7 +244,9 @@ public class VehicleNumAndType {
 //                writer.write(entry.getKey() + "," + entry.getValue() + "\n");
 //            }
 
+
             //不包含经营范围信息的车辆信息导入数据库
+            int typeOfSelfCount = 0;
             for(Map.Entry<String, String> entry: typeErrorMap.entrySet()){
 //                writer.write(entry.getKey() + "," + entry.getValue() + "\n");
                 Vehicle vehicle = new Vehicle();
@@ -254,12 +267,18 @@ public class VehicleNumAndType {
                 if(!JdbcOperation.query(vehicle,conn)){
                     // 数据库中没有主键相同的数据,插入
                     JdbcOperation.insert(vehicle,conn);
+                    typeOfSelfCount++;
 
                 }
             }
+            System.out.println("只按自带类型分类的车辆数据量"+typeOfSelfCount);
 
             conn.close();
 //            writer.close();
+            System.out.println("tow kind map total"+guestDataMap.size());
+            System.out.println("self type map total"+typeErrorMap.size());
+            System.out.println(" map total"+(typeErrorMap.size()+guestDataMap.size()));
+            System.out.println("插入数据总数量:"+ (typeOfSelfCount+countOfTwoKind));
 
         } catch (IOException e) {
             e.printStackTrace();
